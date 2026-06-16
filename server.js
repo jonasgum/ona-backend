@@ -21,7 +21,7 @@ app.post('/session', async (req, res) => {
 
   const options = {
     hostname: 'api.openai.com',
-    path: '/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17',
+    path: '/v1/realtime?model=gpt-4o-realtime-preview',
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${OPENAI_API_KEY}`,
