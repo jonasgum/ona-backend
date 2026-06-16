@@ -17,7 +17,8 @@ app.post('/session', async (req, res) => {
   const { sdp } = req.body;
   if (!sdp) return res.status(400).json({ error: 'SDP krävs' });
 
-  console.log('📥 SDP mottaget, längd:', sdp.length);
+  console.log('📥 SDP längd:', sdp.length);
+  console.log('📥 SDP start:', sdp.substring(0, 50));
 
   const options = {
     hostname: 'api.openai.com',
@@ -30,15 +31,18 @@ app.post('/session', async (req, res) => {
     },
   };
 
+  console.log('🚀 Sending to:', options.path);
+  console.log('🚀 Headers:', JSON.stringify(options.headers));
+
   const openaiReq = https.request(options, (openaiRes) => {
     console.log('📡 OpenAI status:', openaiRes.statusCode);
     let data = '';
     openaiRes.on('data', (chunk) => data += chunk);
     openaiRes.on('end', () => {
+      console.log('📡 OpenAI response:', data.substring(0, 200));
       if (openaiRes.statusCode === 201 || openaiRes.statusCode === 200) {
         res.json({ sdp: data });
       } else {
-        console.error('❌ OpenAI fel:', data);
         res.status(openaiRes.statusCode).json({ error: data });
       }
     });
