@@ -21,7 +21,7 @@ app.post('/session', (req, res) => {
   if (!sdp) return res.status(400).json({ error: 'SDP krävs' });
 
   console.log('📥 SDP mottaget, längd:', sdp.length);
-  console.log('📥 SDP första 300 tecken:', sdp.substring(0, 300));
+  console.log('📥 FULL SDP:', sdp);
 
   const options = {
     hostname: 'api.openai.com',
