@@ -9,11 +9,18 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught exception:', err);
 });
 
-// Skapa Realtime-session och returnera client_secret
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ Unhandled rejection:', reason);
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.post('/session', (req, res) => {
   console.log('📥 Skapar Realtime-session...');
 
@@ -38,19 +45,22 @@ app.post('/session', (req, res) => {
     let data = '';
     openaiRes.on('data', (chunk) => data += chunk);
     openaiRes.on('end', () => {
-      console.log('📡 OpenAI svar:', data);
-      if (openaiRes.statusCode === 200 || openaiRes.statusCode === 201) {
-        const parsed = JSON.parse(data);
-        const clientSecret = parsed.client_secret?.value;
-        if (!clientSecret) {
-          console.error('❌ Ingen client_secret i svaret');
-          return res.status(500).json({ error: 'Ingen client_secret', raw: data });
+      console.log('📡 OpenAI svar:', data.substring(0, 300));
+      try {
+        if (openaiRes.statusCode === 200 || openaiRes.statusCode === 201) {
+          const parsed = JSON.parse(data);
+          const clientSecret = parsed.client_secret?.value;
+          if (!clientSecret) {
+            return res.status(500).json({ error: 'Ingen client_secret', raw: data });
+          }
+          console.log('✅ client_secret erhållen');
+          res.json({ client_secret: clientSecret });
+        } else {
+          res.status(openaiRes.statusCode).json({ error: data });
         }
-        console.log('✅ client_secret erhållen');
-        res.json({ client_secret: clientSecret });
-      } else {
-        console.error('❌ OpenAI fel:', data);
-        res.status(openaiRes.statusCode).json({ error: data });
+      } catch (e) {
+        console.error('❌ Parse fel:', e);
+        res.status(500).json({ error: e.message });
       }
     });
   });
@@ -64,7 +74,11 @@ app.post('/session', (req, res) => {
   openaiReq.end();
 });
 
-app.listen(PORT, '192.168.86.20', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Ona backend körs på port ${PORT}`);
   console.log(`🔑 OpenAI nyckel: ${OPENAI_API_KEY ? '✅ Inladdad' : '❌ Saknas!'}`);
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error:', err);
 });
