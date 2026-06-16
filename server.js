@@ -6,7 +6,6 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.text({ type: 'application/sdp', limit: '10mb' }));
 
 const PORT = process.env.PORT || 3000;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -61,7 +60,7 @@ app.post('/session', async (req, res) => {
   openaiReq.end();
 });
 
-app.listen(PORT, '192.168.86.20', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Ona backend körs på port ${PORT}`);
   console.log(`🔑 OpenAI nyckel: ${OPENAI_API_KEY ? '✅ Inladdad' : '❌ Saknas!'}`);
 });
