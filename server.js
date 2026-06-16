@@ -25,7 +25,7 @@ app.post('/session', (req, res) => {
   console.log('📥 Skapar Realtime-session...');
 
   const body = JSON.stringify({
-    model: 'gpt-4o-realtime-preview',
+    model: 'gpt-realtime',
     voice: 'nova',
   });
 
