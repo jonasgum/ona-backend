@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
-if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -16,15 +15,10 @@ app.get('/health', (req, res) => {
 
 app.post('/session', async (req, res) => {
   const { sdp } = req.body;
-  if (!sdp) {
-    console.error('❌ Inget SDP mottaget');
-    return res.status(400).json({ error: 'SDP krävs' });
-  }
+  if (!sdp) return res.status(400).json({ error: 'SDP krävs' });
 
   console.log('📥 SDP mottaget, längd:', sdp.length);
-  console.log('🚀 Skickar till OpenAI...');
 
-  const postData = sdp;
   const options = {
     hostname: 'api.openai.com',
     path: '/v1/realtime?model=gpt-4o-realtime-preview',
@@ -32,7 +26,7 @@ app.post('/session', async (req, res) => {
     headers: {
       'Authorization': `Bearer ${OPENAI_API_KEY}`,
       'Content-Type': 'application/sdp',
-      'Content-Length': Buffer.byteLength(postData),
+      'Content-Length': Buffer.byteLength(sdp),
     },
   };
 
@@ -42,7 +36,6 @@ app.post('/session', async (req, res) => {
     openaiRes.on('data', (chunk) => data += chunk);
     openaiRes.on('end', () => {
       if (openaiRes.statusCode === 201 || openaiRes.statusCode === 200) {
-        console.log('✅ SDP answer mottaget, längd:', data.length);
         res.json({ sdp: data });
       } else {
         console.error('❌ OpenAI fel:', data);
@@ -52,11 +45,11 @@ app.post('/session', async (req, res) => {
   });
 
   openaiReq.on('error', (e) => {
-    console.error('❌ Request fel:', e);
+    console.error('❌ fel:', e);
     res.status(500).json({ error: e.message });
   });
 
-  openaiReq.write(postData);
+  openaiReq.write(sdp);
   openaiReq.end();
 });
 
